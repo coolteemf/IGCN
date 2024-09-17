@@ -1,7 +1,7 @@
 from __future__ import division
 import tflearn
 from tflearn import conv_2d, merge
-from layers import *
+from .layers import *
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
