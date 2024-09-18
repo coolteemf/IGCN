@@ -65,16 +65,16 @@ sess = tf.Session(config=config)
 # print(sess.run(x))
 adj = np.random.uniform(size=(nNode,nNode)).astype(np.float32)
 variables_dict = {
-    "features": np.random.uniform(size=(1, 3)).astype(np.float32),        # initial 3D coordinates
-    "labels": np.random.uniform(size=(1, 3)).astype(np.float32),          # ground truth
+    "features": np.random.uniform(size=(nNode, 3)).astype(np.float32),        # initial 3D coordinates
+    "labels": np.random.uniform(size=(nNode, 3)).astype(np.float32),          # ground truth
     "img_inp": np.random.uniform(size=(640, 640, 3)).astype(np.float32),     # initial projection + DRR
     "img_label": np.random.uniform(size=(640, 640, 3)).astype(np.float32),   # target deformation map
-    "shapes": np.random.uniform(size=(1, 3)).astype(np.float32),          # relative positions
-    "ipos": np.random.uniform(size=(1, 2)).astype(np.float32),            # initial projected points
+    "shapes": np.random.uniform(size=(nNode, 3)).astype(np.float32),          # relative positions
+    "ipos": np.random.uniform(size=(nNode, 2)).astype(np.float32),            # initial projected points
     "adj" : normalize_adj(adj),        # adj matrix size
     "rmax": np.random.uniform(size=(1,)).astype(np.float32),                             # rmax for projection        
-    "face": np.random.uniform(size=(1, 4)).astype(np.int32),              # triangle face
-    "face_norm": np.random.uniform(size=(1, 3)).astype(np.float32),       # face normal vector
+    "face": np.random.uniform(size=(nNode, 4)).astype(np.int32),              # triangle face
+    "face_norm": np.random.uniform(size=(nNode, 3)).astype(np.float32),       # face normal vector
     "support": [preprocess_adj(adj)], # for convolution
 }
 
@@ -83,4 +83,5 @@ feed_dict = construct_feed_dict(**variables_dict, placeholders=placeholders)
 # Assigns values to tf variables objects
 sess.run(tf.global_variables_initializer())
 _out = sess.run([model.outputs], feed_dict=feed_dict)
+print(_out[0].shape)
 sess.close()

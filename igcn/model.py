@@ -1,7 +1,7 @@
 from __future__ import division
 import tflearn
-from tflearn import merge
-from .layers import *
+from tflearn import conv_2d, merge
+from layers import *
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -158,67 +158,66 @@ class GCN(Model):
         
         #640 640
         x=tflearn.batch_normalization(x)
-        print(tf.layers)
-        x=tf.layers.conv2d(x,20,kernel_size=(3,3),strides=1,activation=tf.nn.relu,)
-        x=tf.layers.conv2d(x,20,kernel_size=(3,3),strides=1,activation=tf.nn.relu,)
+        x=tflearn.layers.conv.conv_2d(x,20,(3,3),strides=1,activation='relu',trainable=True)
+        x=tflearn.layers.conv.conv_2d(x,20,(3,3),strides=1,activation='relu',trainable=True)
         x0=x
 
         #320 320
         x=tflearn.max_pool_2d(x, (2, 2))
-        x=tf.layers.conv2d(x,40,kernel_size=(3,3),strides=1,activation=tf.nn.relu,)
-        x=tf.layers.conv2d(x,40,kernel_size=(3,3),strides=1,activation=tf.nn.relu,)
+        x=tflearn.layers.conv.conv_2d(x,40,(3,3),strides=1,activation='relu',trainable=True)
+        x=tflearn.layers.conv.conv_2d(x,40,(3,3),strides=1,activation='relu',trainable=True)
         x1=x
 
         #160 160
         x=tflearn.max_pool_2d(x, (2, 2))
-        x=tf.layers.conv2d(x,80,kernel_size=(3,3),strides=1,activation=tf.nn.relu,)
-        x=tf.layers.conv2d(x,80,kernel_size=(3,3),strides=1,activation=tf.nn.relu,)
+        x=tflearn.layers.conv.conv_2d(x,80,(3,3),strides=1,activation='relu',trainable=True)
+        x=tflearn.layers.conv.conv_2d(x,80,(3,3),strides=1,activation='relu',trainable=True)
         x2=x
 
         #80 80
         x=tflearn.max_pool_2d(x, (2, 2))
-        x=tf.layers.conv2d(x,160,kernel_size=(3,3),strides=1,activation=tf.nn.relu,)
-        x=tf.layers.conv2d(x,160,kernel_size=(3,3),strides=1,activation=tf.nn.relu,)
+        x=tflearn.layers.conv.conv_2d(x,160,(3,3),strides=1,activation='relu',trainable=True)
+        x=tflearn.layers.conv.conv_2d(x,160,(3,3),strides=1,activation='relu',trainable=True)
         x3=x
 
         #40 40
         x=tflearn.max_pool_2d(x, (2, 2))
-        x=tf.layers.conv2d(x,320,kernel_size=(3,3),strides=1,activation=tf.nn.relu,)
-        x=tf.layers.conv2d(x,320,kernel_size=(3,3),strides=1,activation=tf.nn.relu,)
+        x=tflearn.layers.conv.conv_2d(x,320,(3,3),strides=1,activation='relu',trainable=True)
+        x=tflearn.layers.conv.conv_2d(x,320,(3,3),strides=1,activation='relu',trainable=True)
         x4=x
 
         #20 20
         x=tflearn.max_pool_2d(x, (2, 2))
-        x=tf.layers.conv2d(x,640,kernel_size=(3,3),strides=1,activation=tf.nn.relu,)
-        x=tf.layers.conv2d(x,640,kernel_size=(3,3),strides=1,activation=tf.nn.relu,)
+        x=tflearn.layers.conv.conv_2d(x,640,(3,3),strides=1,activation='relu',trainable=True)
+        x=tflearn.layers.conv.conv_2d(x,640,(3,3),strides=1,activation='relu',trainable=True)
         x5=x
 
-        u6 = tflearn.conv_2d_transpose(x5, 320, 2, [40, 40], strides=2, padding='same', name ='upsample_1',)
+        u6 = tflearn.layers.conv.conv_2d_transpose(x5, 320, 2, [40, 40], strides=2, padding='same', name ='upsample_1',trainable=True)
         u6 = merge([u6, x4], mode='concat', axis=3, name='upsamle-1-merge')
-        u6 = tf.layers.conv2d(u6, 320, 3, activation=tf.nn.relu, name="conv6_1",)
-        x6 = tf.layers.conv2d(u6, 320, 3, activation=tf.nn.relu, name="conv6_1",)
+        u6 = conv_2d(u6, 320, 3, activation='relu', name="conv6_1",trainable=True)
+        x6 = conv_2d(u6, 320, 3, activation='relu', name="conv6_1",trainable=True)
 
-        u7 = tflearn.conv_2d_transpose(x6, 160, 2, [80, 80], strides=2, padding='same', name ='upsample_2',)
+        u7 = tflearn.layers.conv.conv_2d_transpose(x6, 160, 2, [80, 80], strides=2, padding='same', name ='upsample_2',trainable=True)
         u7 = merge([u7, x3], mode='concat', axis=3, name='upsamle-2-merge')
-        u7 = tf.layers.conv2d(u7, 160, 3, activation=tf.nn.relu, name="conv7_1",)
-        x7 = tf.layers.conv2d(u7, 160, 3, activation=tf.nn.relu, name="conv7_1",)
+        u7 = conv_2d(u7, 160, 3, activation='relu', name="conv7_1",trainable=True)
+        x7 = conv_2d(u7, 160, 3, activation='relu', name="conv7_1",trainable=True)
 
-        u8 = tflearn.conv_2d_transpose(x7, 80, 2, [160, 160], strides=2, padding='same', name ='upsample_3',)
+        u8 = tflearn.layers.conv.conv_2d_transpose(x7, 80, 2, [160, 160], strides=2, padding='same', name ='upsample_3',trainable=True)
         u8 = merge([u8, x2], mode='concat', axis=3, name='upsamle-3-merge')
-        u8 = tf.layers.conv2d(u8, 80, 3, activation=tf.nn.relu, name="conv8_1",)
-        x8 = tf.layers.conv2d(u8, 80, 3, activation=tf.nn.relu, name="conv8_1",)
+        u8 = conv_2d(u8, 80, 3, activation='relu', name="conv8_1",trainable=True)
+        x8 = conv_2d(u8, 80, 3, activation='relu', name="conv8_1",trainable=True)
 
-        u9 = tflearn.conv_2d_transpose(x8, 40, 2, [320, 320], strides=2, padding='same', name ='upsample_4',)
+        u9 = tflearn.layers.conv.conv_2d_transpose(x8, 40, 2, [320, 320], strides=2, padding='same', name ='upsample_4',trainable=True)
         u9 = merge([u9, x1], mode='concat', axis=3, name='upsamle-4-merge')
-        u9 = tf.layers.conv2d(u9, 40, 3, activation=tf.nn.relu, name="conv9_1",)
-        x9 = tf.layers.conv2d(u9, 40, 3, activation=tf.nn.relu, name="conv9_1",)
+        u9 = conv_2d(u9, 40, 3, activation='relu', name="conv9_1",trainable=True)
+        x9 = conv_2d(u9, 40, 3, activation='relu', name="conv9_1",trainable=True)
 
-        u10 = tflearn.conv_2d_transpose(x9, 20, 2, [640, 640], strides=2, padding='same', name ='upsample_5',)
+        u10 = tflearn.layers.conv.conv_2d_transpose(x9, 20, 2, [640, 640], strides=2, padding='same', name ='upsample_5',trainable=True)
         u10 = merge([u10, x0], mode='concat', axis=3, name='upsamle-5-merge')
-        u10 = tf.layers.conv2d(u10, 20, 3, activation=tf.nn.relu, name="conv10_1",)
-        x10 = tf.layers.conv2d(u10, 20, 3, activation=tf.nn.relu, name="conv10_1",)
+        u10 = conv_2d(u10, 20, 3, activation='relu', name="conv10_1",trainable=True)
+        x10 = conv_2d(u10, 20, 3, activation='relu', name="conv10_1",trainable=True)
 
-        fc = tf.layers.conv2d(x10, 3, (1, 1), activation='linear',)
+        fc = tflearn.layers.conv.conv_2d(x10, 3, (1, 1), activation='linear',trainable=True)
 
         # update image feature and loss
         self.placeholders.update({'img_feat': [tf.squeeze(fc), tf.squeeze(x8), tf.squeeze(x9), tf.squeeze(x10)]})
