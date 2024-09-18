@@ -1,3 +1,4 @@
 igcn/__pycache__/*
 poetry.lock
 .python-version
+.venv/*
