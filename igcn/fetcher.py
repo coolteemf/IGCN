@@ -1,109 +1,55 @@
 import numpy as np
-import pickle
 import threading
 import queue
-import os
-import copy
-from skimage import io,transform
 
-import cv2
-from render import *
-from utils import *
+from os.path import join
 
 class DataFetcher(threading.Thread):
 
-    def __init__(self, file_train, organ):
+    def __init__(self):
         super(DataFetcher, self).__init__()
         self.stopped = False
         self.queue = queue.Queue(64)
-        self.pkl_list = []
-
-        if not file_train == "":
-            with open(file_train, 'r') as f:
-                while (True):
-                    line = f.readline().strip()
-                    if not line:
-                        break
-                    
-                    path = line + organ + ".pickle"                    
-                    if os.path.exists("../Data/" + path):
-                        self.pkl_list.append(path)
+        self.index_list = list(range(20_000))
                     
         self.index = 0
-        self.number = len(self.pkl_list)
-        np.random.shuffle(self.pkl_list)
-        
-        # Settings
-        filename = os.path.basename(self.pkl_list[0])
-        filename = filename.replace(".pickle", "")
-        
+        self.number = len(self.index_list)
+        np.random.shuffle(self.index_list)
+        self.pth = "/home/francois/Projects/data/training/Liver_patient_Paris_PCAresp"
+            
     def load_data(self, idx):
+        i = self.index_list[idx]
+        paths = {
+            "features": join(self.pth, "parameters", "mesh_pts.npy"),            # initial 3D coordinates
+            "labels": join(self.pth, f'mesh_pts_{i}.npy'),                     # ground truth
+            "img": join(self.pth, f'projection_{i}.npy'),                      # DRR input
+            "img_label": join(self.pth, f'mesh_disp_2d_{i}.npy'),              # target deformation map
+            "img_init": join(self.pth,"parameters", 'mesh_projection.npy'),      # Rest projected mesh
+            "adj" : join(self.pth, "parameters", "mesh_adjacency.npy"),          # adj matrix size
+            "rmax": join(self.pth, "parameters", "rmax.npy"),                    # rmax for projection    
+            "camera_projection": join(self.pth, "parameters", "camera_projection.npy") # projection matrix
+        }
+        data = {k: np.load(v).squeeze().astype(np.float32) for k,v in paths.items()}
 
-        pkl_path = "../Data/" + self.pkl_list[idx]
-        adj, features, labels, trans_vec, face_norm, face, rmax, projM = pickle.load(open(pkl_path, 'rb'))
+        data['features'] = data['features'] / data['rmax'][None,:]
+        data['labels'] = data['labels'].T / data['rmax'][None,:]
 
-        img_path = pkl_path.replace(pkl_path.split("/")[-1],"DRR_0000.bmp")
-        img_path = img_path.replace("Pickle/","DRR/")
-        img = io.imread(img_path)
-        img = img.astype('float32')
-        
-        caseID = pkl_path.split('/')[3]
-        caseID = caseID.replace("case", "")
+        center = np.mean(data['features'], 0)[None]
 
-        if "3D-CT" in pkl_path:
-            phaseID = "00"
-        else:
-            phaseID = pkl_path.split('/')[4]
-
-        img = img[20:480, 20:620]
-        img = cv2.copyMakeBorder(img, 20, 160, 20, 20, cv2.BORDER_CONSTANT, (0,0,0))
-
-        gray = img[:,:,0]
-
-        features = (features + trans_vec) / rmax
-        labels = (labels + trans_vec) / rmax
-
-        center = np.mean(features, 0)
-        deform = labels - features
-
-        n = len(features)
+        n = len(data['features'])
         shapes = np.zeros((n, 3))
         for i in range(n):
-            shapes[i] = features[i] - center
+            shapes[i] = data['features'][i] - center
 
-        ipos = np.zeros((n, 2))
-        for i in range(n):
-            coord = np.insert(np.transpose([features[:,0], features[:,2], features[:,1]])[i], 3, 1)
-            P = projM * coord
-            ipos[i] = [640-(P[2, 1]+1)*320, (P[0, 0]+1)*320]
-
-        # render initial shape
-        img_label = render_multi(features, labels, face, deform, True)
-        img_label = np.array(img_label, dtype=np.float32)
-
-        img_init = render(features, face, deform, False)
-        img_init = img_init[:,:,0]
-        img_init = np.array(img_init / img_init.max() * 255, dtype=np.float32)
+        ipos = np.einsum( 'ij, nj -> ni', data['camera_projection'][:3,:3], data['features'])
+        ipos += data['camera_projection'][:3,3][None, :]
+        ipos = ipos[:, :2] / ipos[:, 2:]
 
         shift = 122.0
-        constant = np.full((640, 640), shift)
-        img = np.stack((img_init, constant, gray), axis = 2)
-
-        return adj, features, labels, trans_vec, face_norm, face, rmax, projM, img, img_label, shapes, ipos, caseID, phaseID
-
-
-    def load_deformation(self, num, filepath):
-
-        with open(filepath, "r", encoding='utf-8') as f:
-            #get GT
-            coord = []
-            line = f.readlines()
-            for i, rows in enumerate(line): 
-                if i in range(13, num+13): 
-                    rows = rows.split() 
-                    coord.append(rows[0:3])
-
-            return np.array(coord, dtype='float')
+        constant = np.full(data['img'].shape, shift)
+        img = np.stack((data['img_init'] * 255., constant, data['img'] * 255.), axis = 2)
+        
+        return data['adj'], data['features'], data['labels'], data['rmax'], data['camera_projection'], img, data['img_label'], shapes, ipos
 
     def run(self):
         while self.index < 90000000 and not self.stopped:
@@ -112,9 +58,7 @@ class DataFetcher(threading.Thread):
             self.index += 1
 
             if self.index % self.number == 0: 
-                np.random.shuffle(self.pkl_list)
-                self.pkl_list = copy.deepcopy(self.pkl_list)
-
+                np.random.shuffle(self.index_list)
 
     def fetch(self):
         if self.stopped:
