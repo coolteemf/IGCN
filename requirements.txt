@@ -4,7 +4,10 @@ cachetools==5.5.0
 certifi==2024.8.30
 charset-normalizer==3.3.2
 clang==5.0
+contourpy==1.1.1
+cycler==0.12.1
 flatbuffers==1.12
+fonttools==4.54.1
 gast==0.4.0
 google-auth==2.34.0
 google-auth-oauthlib==0.4.6
@@ -17,9 +20,11 @@ importlib_metadata==8.5.0
 keras==2.15.0
 keras-nightly==2.5.0.dev2021032900
 Keras-Preprocessing==1.1.2
+kiwisolver==1.4.7
 lazy_loader==0.4
 Markdown==3.7
 MarkupSafe==2.1.5
+matplotlib==3.6.3
 networkx==3.2.1
 numpy==1.19.5
 oauthlib==3.2.2
@@ -30,6 +35,8 @@ Pillow==9.5.0
 protobuf==3.20.3
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
+pyparsing==3.1.4
+python-dateutil==2.9.0.post0
 requests==2.32.3
 requests-oauthlib==2.0.0
 rsa==4.9
@@ -39,6 +46,7 @@ six==1.15.0
 tensorboard==2.11.2
 tensorboard-data-server==0.6.1
 tensorboard-plugin-wit==1.8.1
+tensorboardX==2.6.2.2
 tensorflow==2.6.0
 tensorflow-estimator==2.15.0
 termcolor==1.1.0
