@@ -1,5 +1,7 @@
 import numpy as np
 import scipy.sparse as sp
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 def sparse_to_tuple(sparse_mx):
 	def to_tuple(mx):
@@ -43,3 +45,19 @@ def construct_feed_dict(features, labels, img_inp, img_label, shapes, ipos, adj,
 
 	return feed_dict
 
+def plot_img(img,
+             fax=None,
+             title="", cmap='gray', colorbar=True, display=False, *args, **kwargs):
+    if fax is None:
+        f,ax=plt.subplots()
+    else:
+        f,ax=fax
+    im = ax.imshow(img, cmap=cmap, *args, **kwargs)
+    ax.set_title(title)
+    if colorbar:
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes('right', size='5%', pad=0.05)
+        f.colorbar(im, cax=cax, orientation='vertical')
+    if display:
+        plt.show()
+    return f,ax
