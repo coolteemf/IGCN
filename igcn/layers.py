@@ -188,17 +188,10 @@ class GraphProjection(Layer):
         self.ipos = placeholders['ipos']
         self.rmax = placeholders['rmax']
       
-    def _call(self, inputs): 
-
-        # inputs, shape = (500, 3)
-        coord = inputs
-
-        # 1.0 in RGB space = 6800 / rmax mm in XYZ real space --> render.py
-        # co = 1.0 / self.rmax
-            
-        x = self.ipos[:, 1]
-        y = self.ipos[:, 0]
-        d = project(self.img_feat[0], y, x, 3) #* co
+    def _call(self, inputs):             
+        x = self.ipos[:, 0]
+        y = self.ipos[:, 1]
+        d = project(self.img_feat[0], y, x, 3) / self.rmax
 
         outputs = tf.concat([d, self.shapes], 1)
 

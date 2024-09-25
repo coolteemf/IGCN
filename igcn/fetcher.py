@@ -27,10 +27,15 @@ class DataFetcher(threading.Thread):
             "img_init": join(self.pth,"parameters", 'mesh_projection.npy'),      # Rest projected mesh
             "adj" : join(self.pth, "parameters", "mesh_adjacency.npy"),          # adj matrix size
             "rmax": join(self.pth, "parameters", "rmax.npy"),                    # rmax for projection    
-            "camera_projection": join(self.pth, "parameters", "camera_projection.npy") # projection matrix
+            "camera_projection": join(self.pth, "parameters", "camera_projection.npy"), # projection matrix
+            "faces": join(self.pth, "parameters", 'mesh_faces.npy')             # mesh faces
         }
         data = {k: np.load(v).squeeze().astype(np.float32) for k,v in paths.items()}
 
+        ipos = np.einsum( 'ij, nj -> ni', data['camera_projection'][:3,:3], data['features'])
+        ipos += data['camera_projection'][:3,3][None, :]
+        ipos = ipos[:, :2] / ipos[:, 2:]
+        
         data['features'] = data['features'] / data['rmax'][None,:]
         data['labels'] = data['labels'].T / data['rmax'][None,:]
 
@@ -41,15 +46,12 @@ class DataFetcher(threading.Thread):
         for i in range(n):
             shapes[i] = data['features'][i] - center
 
-        ipos = np.einsum( 'ij, nj -> ni', data['camera_projection'][:3,:3], data['features'])
-        ipos += data['camera_projection'][:3,3][None, :]
-        ipos = ipos[:, :2] / ipos[:, 2:]
 
         shift = 122.0
         constant = np.full(data['img'].shape, shift)
         img = np.stack((data['img_init'] * 255., constant, data['img'] * 255.), axis = 2)
         
-        return data['adj'], data['features'], data['labels'], data['rmax'], data['camera_projection'], img, data['img_label'], shapes, ipos
+        return data['adj'], data['features'], data['labels'], data['rmax'], data['camera_projection'], img, data['img_label'], shapes, ipos, data["faces"]
 
     def run(self):
         while self.index < 90000000 and not self.stopped:
