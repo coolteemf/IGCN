@@ -16,8 +16,8 @@ def mesh_loss(pred, placeholders):
 
     V_max = tf.reduce_max(coord_label)
     V_min = tf.reduce_min(coord_label)
-    coord_pred = tf.divide(tf.subtract(coord_pred,V_min),tf.subtract(V_max,V_min))
-    coord_label = tf.divide(tf.subtract(coord_label,V_min),tf.subtract(V_max,V_min))
+    coord_pred = tf.divide(tf.subtract(coord_pred,V_min),(tf.subtract(V_max,V_min) + 1e-6))
+    coord_label = tf.divide(tf.subtract(coord_label,V_min),(tf.subtract(V_max,V_min) + 1e-6))
 
     # Laplacian loss
     rowsum = tf.reduce_sum(placeholders['adj'],1)
@@ -222,3 +222,4 @@ class GCN(Model):
         self.placeholders.update({'img_feat': [tf.squeeze(fc), tf.squeeze(x8), tf.squeeze(x9), tf.squeeze(x10)]})
         self.img_loss = tf.reduce_mean(tf.square(tf.subtract(tf.squeeze(fc), self.placeholders['img_label']))) / tf.reduce_mean(self.placeholders['rmax'] ** 2)
         self.loss += self.img_loss
+        self.img_feat = self.placeholders['img_feat']
