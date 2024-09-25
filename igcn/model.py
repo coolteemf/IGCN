@@ -97,11 +97,9 @@ class Model:
     def _loss(self):
         raise NotImplementedError
 
-    def save(self, sess=None):
-        if not sess:
-            raise AttributeError("TensorFlow session not provided.")
+    def save(self, sess, save_dir):
         saver = tf.train.Saver(self.vars)
-        save_path = saver.save(sess,  path + "temp/%s.ckpt" % self.name)
+        save_path = saver.save(sess,  save_dir + "%s.ckpt" % self.name)
 
 
     def load(self, sess=None):
@@ -124,7 +122,8 @@ class GCN(Model):
 
     def _loss(self):
         # loss function
-        self.loss += mesh_loss(self.outputs, self.placeholders)
+        self.mesh_loss = mesh_loss(self.outputs, self.placeholders)
+        self.loss += self.mesh_loss 
 
     def _build(self):
        
@@ -156,63 +155,63 @@ class GCN(Model):
         x = self.placeholders['img_inp']
         x = tf.expand_dims(x, 0)
         
-        #640 640
+        #512 512
         x=tflearn.batch_normalization(x)
         x=tflearn.layers.conv.conv_2d(x,20,(3,3),strides=1,activation='relu',trainable=True)
         x=tflearn.layers.conv.conv_2d(x,20,(3,3),strides=1,activation='relu',trainable=True)
         x0=x
 
-        #320 320
+        #256 256
         x=tflearn.max_pool_2d(x, (2, 2))
         x=tflearn.layers.conv.conv_2d(x,40,(3,3),strides=1,activation='relu',trainable=True)
         x=tflearn.layers.conv.conv_2d(x,40,(3,3),strides=1,activation='relu',trainable=True)
         x1=x
 
-        #160 160
+        #128 128
         x=tflearn.max_pool_2d(x, (2, 2))
         x=tflearn.layers.conv.conv_2d(x,80,(3,3),strides=1,activation='relu',trainable=True)
         x=tflearn.layers.conv.conv_2d(x,80,(3,3),strides=1,activation='relu',trainable=True)
         x2=x
 
-        #80 80
+        #64 64
         x=tflearn.max_pool_2d(x, (2, 2))
         x=tflearn.layers.conv.conv_2d(x,160,(3,3),strides=1,activation='relu',trainable=True)
         x=tflearn.layers.conv.conv_2d(x,160,(3,3),strides=1,activation='relu',trainable=True)
         x3=x
 
-        #40 40
+        #32 32
         x=tflearn.max_pool_2d(x, (2, 2))
         x=tflearn.layers.conv.conv_2d(x,320,(3,3),strides=1,activation='relu',trainable=True)
         x=tflearn.layers.conv.conv_2d(x,320,(3,3),strides=1,activation='relu',trainable=True)
         x4=x
 
-        #20 20
+        #16 16
         x=tflearn.max_pool_2d(x, (2, 2))
         x=tflearn.layers.conv.conv_2d(x,640,(3,3),strides=1,activation='relu',trainable=True)
         x=tflearn.layers.conv.conv_2d(x,640,(3,3),strides=1,activation='relu',trainable=True)
         x5=x
 
-        u6 = tflearn.layers.conv.conv_2d_transpose(x5, 320, 2, [40, 40], strides=2, padding='same', name ='upsample_1',trainable=True)
+        u6 = tflearn.layers.conv.conv_2d_transpose(x5, 320, 2, [512//16, 512//16], strides=2, padding='same', name ='upsample_1',trainable=True)
         u6 = merge([u6, x4], mode='concat', axis=3, name='upsamle-1-merge')
         u6 = conv_2d(u6, 320, 3, activation='relu', name="conv6_1",trainable=True)
         x6 = conv_2d(u6, 320, 3, activation='relu', name="conv6_1",trainable=True)
 
-        u7 = tflearn.layers.conv.conv_2d_transpose(x6, 160, 2, [80, 80], strides=2, padding='same', name ='upsample_2',trainable=True)
+        u7 = tflearn.layers.conv.conv_2d_transpose(x6, 160, 2, [512//8, 512//8], strides=2, padding='same', name ='upsample_2',trainable=True)
         u7 = merge([u7, x3], mode='concat', axis=3, name='upsamle-2-merge')
         u7 = conv_2d(u7, 160, 3, activation='relu', name="conv7_1",trainable=True)
         x7 = conv_2d(u7, 160, 3, activation='relu', name="conv7_1",trainable=True)
 
-        u8 = tflearn.layers.conv.conv_2d_transpose(x7, 80, 2, [160, 160], strides=2, padding='same', name ='upsample_3',trainable=True)
+        u8 = tflearn.layers.conv.conv_2d_transpose(x7, 80, 2, [512//4, 512//4], strides=2, padding='same', name ='upsample_3',trainable=True)
         u8 = merge([u8, x2], mode='concat', axis=3, name='upsamle-3-merge')
         u8 = conv_2d(u8, 80, 3, activation='relu', name="conv8_1",trainable=True)
         x8 = conv_2d(u8, 80, 3, activation='relu', name="conv8_1",trainable=True)
 
-        u9 = tflearn.layers.conv.conv_2d_transpose(x8, 40, 2, [320, 320], strides=2, padding='same', name ='upsample_4',trainable=True)
+        u9 = tflearn.layers.conv.conv_2d_transpose(x8, 40, 2, [512//2, 512//2], strides=2, padding='same', name ='upsample_4',trainable=True)
         u9 = merge([u9, x1], mode='concat', axis=3, name='upsamle-4-merge')
         u9 = conv_2d(u9, 40, 3, activation='relu', name="conv9_1",trainable=True)
         x9 = conv_2d(u9, 40, 3, activation='relu', name="conv9_1",trainable=True)
 
-        u10 = tflearn.layers.conv.conv_2d_transpose(x9, 20, 2, [640, 640], strides=2, padding='same', name ='upsample_5',trainable=True)
+        u10 = tflearn.layers.conv.conv_2d_transpose(x9, 20, 2, [512, 512], strides=2, padding='same', name ='upsample_5',trainable=True)
         u10 = merge([u10, x0], mode='concat', axis=3, name='upsamle-5-merge')
         u10 = conv_2d(u10, 20, 3, activation='relu', name="conv10_1",trainable=True)
         x10 = conv_2d(u10, 20, 3, activation='relu', name="conv10_1",trainable=True)
@@ -221,4 +220,5 @@ class GCN(Model):
 
         # update image feature and loss
         self.placeholders.update({'img_feat': [tf.squeeze(fc), tf.squeeze(x8), tf.squeeze(x9), tf.squeeze(x10)]})
-        self.loss += tf.reduce_mean(tf.square(tf.subtract(tf.squeeze(fc), self.placeholders['img_label']))) / 6800.0
+        self.img_loss = tf.reduce_mean(tf.square(tf.subtract(tf.squeeze(fc), self.placeholders['img_label']))) / tf.reduce_mean(self.placeholders['rmax'] ** 2)
+        self.loss += self.img_loss
