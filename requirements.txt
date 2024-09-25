@@ -3,16 +3,18 @@ astunparse==1.6.3
 cachetools==5.5.0
 certifi==2024.8.30
 charset-normalizer==3.3.2
+clang==5.0
 flatbuffers==1.12
 gast==0.4.0
 google-auth==2.34.0
 google-auth-oauthlib==0.4.6
 google-pasta==0.2.0
-grpcio==1.34.1
+grpcio==1.66.1
 h5py==3.1.0
 idna==3.10
 imageio==2.35.1
 importlib_metadata==8.5.0
+keras==2.15.0
 keras-nightly==2.5.0.dev2021032900
 Keras-Preprocessing==1.1.2
 lazy_loader==0.4
@@ -37,8 +39,8 @@ six==1.15.0
 tensorboard==2.11.2
 tensorboard-data-server==0.6.1
 tensorboard-plugin-wit==1.8.1
-tensorflow==2.5.0
-tensorflow-estimator==2.5.0
+tensorflow==2.6.0
+tensorflow-estimator==2.15.0
 termcolor==1.1.0
 tflearn @ git+https://github.com/MihaMarkic/tflearn.git@6472b8588e758ff4a33a2764d4ee638bbd0e42f0
 tifffile==2024.8.30
