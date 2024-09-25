@@ -29,7 +29,7 @@ def preprocess_adj(adj):
 	adj_normalized = normalize_adj(adj + sp.eye(adj.shape[0]))
 	return sparse_to_tuple(adj_normalized)
 
-def construct_feed_dict(features, labels, img_inp, img_label, shapes, ipos, adj, rmax, face, face_norm, support, placeholders):
+def construct_feed_dict(features, labels, img_inp, img_label, shapes, ipos, adj, rmax, support, placeholders):
 	feed_dict = dict()
 	feed_dict.update({placeholders['features']: features})
 	feed_dict.update({placeholders['labels']: labels})
@@ -37,10 +37,8 @@ def construct_feed_dict(features, labels, img_inp, img_label, shapes, ipos, adj,
 	feed_dict.update({placeholders['img_label']: img_label})
 	feed_dict.update({placeholders['shapes']: shapes})
 	feed_dict.update({placeholders['ipos']: ipos})
-	feed_dict.update({placeholders['adj']: adj.toarray()})
+	feed_dict.update({placeholders['adj']: adj})
 	feed_dict.update({placeholders['rmax']: rmax})
-	feed_dict.update({placeholders['face']: face})
-	feed_dict.update({placeholders['face_norm']: face_norm})
 	feed_dict.update({placeholders['support'][i]: support[i] for i in range(len(support))})
 
 	return feed_dict
