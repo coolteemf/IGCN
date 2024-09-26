@@ -14,11 +14,14 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_float("learning_rate", 1e-4, "Initial learning rate.")
 flags.DEFINE_float("dropout", 0.5, "Dropout rate (1 - keep probability).") #not used
-flags.DEFINE_integer("epochs", 5, "Number of epochs to train.")
+flags.DEFINE_integer("epochs", 40, "Number of epochs to train.")
 flags.DEFINE_integer("hidden",256, "Number of units in hidden layer.") 
 flags.DEFINE_integer("feat_dim", 6, "Number of units in feature layer.")
 flags.DEFINE_integer("coord_dim", 3, "Number of units in output layer.")
 flags.DEFINE_float("weight_decay", 5e-6, "Weight decay for L2 loss.")
+
+def to_rgb(input, rmax):
+    return (input + rmax) / 2 * 255
 
 def train():
 
@@ -80,7 +83,6 @@ def train():
 
             # Update placeholder
             feed_dict = construct_feed_dict(features, labels, img_inp, img_label, shapes, ipos, adj, rmax, support, placeholders)
-
             # Training and update weights
             _, dists, outs, mesh_loss, img_loss, img_feat, activations = sess.run([model.opt_op, model.loss, model.outputs, model.mesh_loss, model.img_loss,
                                                                       model.img_feat, model.activations], feed_dict=feed_dict)
@@ -90,10 +92,6 @@ def train():
             #     else:
             #         print(f"activation {i}", activation.shape, activation.min(), activation.max())
             # print(f"labels min/max: {labels.min()} {labels.max()}")
-            
-            features = features * rmax 
-            labels = labels * rmax
-            outs = outs * rmax
             
             
             for i in range(nNode):
@@ -120,9 +118,9 @@ def train():
                 writer.add_figure('GTZ_batch', plot_img(img_label[...,2], cmap=None)[0], iters)
                 print(f"disp before proj", img_feat[0].min((0,1)), img_feat[0].max((0,1)))
                 print(f"disp after proj", activations[1][:,:3].min(0) * rmax, activations[1][:,:3].max(0) * rmax)
-                writer.add_mesh("gcn_input", features[None], (activations[1][:, :3]  * rmax[None])[None], faces[None], global_step=iters)
-                writer.add_mesh("gcn_output", features[None], (activations[-1][:, :3]  * rmax[None])[None], faces[None], global_step=iters) # Convert disp to 255 range
-                writer.add_mesh("gcn_gt", features[None], labels[None], faces[None], global_step=iters)
+                writer.add_mesh("gcn_input", features[None], to_rgb(activations[1][:, :3]  * rmax[None], rmax[None])[None], faces[None], global_step=iters)
+                writer.add_mesh("gcn_output", features[None], to_rgb(activations[-1][:, :3]  * rmax[None], rmax[None])[None], faces[None], global_step=iters)
+                writer.add_mesh("gcn_gt", features[None], to_rgb(labels[None], rmax[None]), faces[None], global_step=iters)
         writer.add_figure('predX_epoch', plot_img(img_feat[0][...,0], cmap=None)[0], epoch)
         writer.add_figure('predY_epoch', plot_img(img_feat[0][...,1], cmap=None)[0], epoch)
         writer.add_figure('predZ_epoch', plot_img(img_feat[0][...,2], cmap=None)[0], epoch)
