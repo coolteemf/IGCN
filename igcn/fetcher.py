@@ -36,8 +36,7 @@ class DataFetcher(threading.Thread):
         ipos += data['camera_projection'][:3,3][None, :]
         ipos = ipos[:, :2] / ipos[:, 2:]
         
-        data['features'] = data['features'] / data['rmax'][None,:]
-        data['labels'] = data['labels'].T / data['rmax'][None,:]
+        data['labels'] = data['labels'].T
 
         center = np.mean(data['features'], 0)[None]
 

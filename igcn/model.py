@@ -82,7 +82,7 @@ class Model:
                 hidden = tf.add(hidden, self.activations[-2]) * 0.5
             self.activations.append(hidden) 
  
-        self.outputs = self.activations[-1]
+        self.outputs = self.activations[-1] * self.rmax
         
         # Store model variables for easy access
         variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=self.name)
@@ -116,6 +116,7 @@ class GCN(Model):
         super(GCN, self).__init__(**kwargs)
 
         self.inputs = placeholders['features']
+        self.rmax = placeholders['rmax']
         self.placeholders = placeholders
         self.optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate)
         self.build()
