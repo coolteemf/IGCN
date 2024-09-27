@@ -14,7 +14,7 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_float("learning_rate", 1e-4, "Initial learning rate.")
 flags.DEFINE_float("dropout", 0.5, "Dropout rate (1 - keep probability).") #not used
-flags.DEFINE_integer("epochs", 40, "Number of epochs to train.")
+flags.DEFINE_integer("epochs", 200, "Number of epochs to train.")
 flags.DEFINE_integer("hidden",256, "Number of units in hidden layer.") 
 flags.DEFINE_integer("feat_dim", 6, "Number of units in feature layer.")
 flags.DEFINE_integer("coord_dim", 3, "Number of units in output layer.")
@@ -109,7 +109,7 @@ def train():
                                mesh_loss=mesh_loss,
                                img_loss=img_loss),
                                iters + epoch * train_number)
-            if (iters%500) == 0:
+            if (iters%2000) == 0:
                 writer.add_figure('predX_batch', plot_img(img_feat[0][...,0], cmap=None)[0], iters)
                 writer.add_figure('predY_batch', plot_img(img_feat[0][...,1], cmap=None)[0], iters)
                 writer.add_figure('predZ_batch', plot_img(img_feat[0][...,2], cmap=None)[0], iters)
@@ -127,11 +127,13 @@ def train():
         writer.add_figure('GTX_epoch', plot_img(img_label[...,0], cmap=None)[0], epoch)
         writer.add_figure('GTY_epoch', plot_img(img_label[...,1], cmap=None)[0], epoch)
         writer.add_figure('GTZ_epoch', plot_img(img_label[...,2], cmap=None)[0], epoch)
-            
+        
         # Save model
-        model.name = "{}".format(epoch)
-        model.save(sess, log_dir)
-        model.name = "gcn"
+        if epoch>0 and (epoch%10) == 0:
+            model.name = "{}".format(epoch)
+            saved_path = model.save(sess, log_dir)
+            print(f"Saved model at epoch {epoch} in {saved_path}")
+            model.name = "gcn"
 
         # print error metric
         mean_error = np.mean(all_errors[np.where(all_errors)])

@@ -100,6 +100,7 @@ class Model:
     def save(self, sess, save_dir):
         saver = tf.train.Saver(self.vars)
         save_path = saver.save(sess,  save_dir + "%s.ckpt" % self.name)
+        return save_path
 
 
     def load(self, sess=None):
