@@ -32,6 +32,8 @@ class DataFetcher(threading.Thread):
         }
         data = {k: np.load(v).squeeze().astype(np.float32) for k,v in paths.items()}
 
+        data['img'] = data['img'].T # Transpose deepdrr
+        
         ipos = np.einsum( 'ij, nj -> ni', data['camera_projection'][:3,:3], data['features'])
         ipos += data['camera_projection'][:3,3][None, :]
         ipos = ipos[:, :2] / ipos[:, 2:]
